@@ -1,4 +1,25 @@
 ---
+import { createApi } from "unsplash-js";
+import type { Random } from "unsplash-js/dist/methods/photos/types";
+
+const unsplash = createApi({
+	accessKey: import.meta.env.ACCESS_KEY,
+	fetch: fetch,
+});
+
+let rand: Random | undefined = undefined;
+const response = await unsplash.photos.getRandom({
+	query: "motorbike",
+	count: 1,
+});
+
+if (response.response) {
+	if (response.response instanceof Array) {
+		rand = response.response[0];
+	}
+}
+
+if (!rand) return new Response("error", { status: 401 });
 ---
 
 <html lang="en">
@@ -7,9 +28,103 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>Good morning bikers</title>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<header>
+			Photo by <a href={rand.user.links.html}>{rand.user.name}</a> on <a
+				href="https://unsplash.com/">Unsplash</a
+			>
+		</header>
+		<canvas id="canvas"></canvas>
+		<input type="button" value="Download" id="download" />
+		<footer>
+			Photo src: <a href={rand.links.html} id="src">{rand.urls.regular}</a>
+		</footer>
 	</body>
 </html>
+
+<script>
+	const canvas: HTMLCanvasElement | null = document.querySelector("#canvas");
+	if (canvas != null) {
+		const ctx = canvas.getContext("2d");
+
+		if (ctx != null) {
+			const img = new Image();
+			const src = document.querySelector("#src");
+			if (src != null) {
+				img.crossOrigin = "anonymous";
+				img.src = src.innerHTML.trim();
+				img.addEventListener("load", () => {
+					canvas.width = window.innerWidth - 20;
+					const ratio = canvas.width / img.width;
+					console.log(ratio);
+					canvas.height = img.height * ratio;
+				});
+				img.addEventListener("load", () => {
+					ctx.shadowColor = "black";
+					ctx.shadowBlur = 7;
+					ctx.lineWidth = 10;
+					ctx.fillStyle = "white";
+					ctx.font = canvas.height / 20 + "px verdana";
+					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+					ctx.fillText(
+						"Good morning bikers",
+						canvas.width / 10,
+						canvas.height - 100
+					);
+				});
+			}
+		}
+
+		const download = document.querySelector("#download");
+		if (download != null) {
+			download.addEventListener("click", () => {
+				// TODO call download api endpoint
+
+				var aDownloadLink = document.createElement("a");
+				// Add the name of the file to the link
+				aDownloadLink.download =
+					"good_morning_bikers_" +
+					new Date().toLocaleDateString("cs") +
+					".png";
+				// Attach the data to the link
+				aDownloadLink.href = canvas.toDataURL();
+				// Get the code to click the download link
+				aDownloadLink.click();
+			});
+		}
+	}
+</script>
+
+<style>
+	html,
+	body {
+		width: 100%;
+		height: 80%;
+		margin: 0;
+	}
+	body {
+		display: flex;
+		flex-direction: column;
+		align-content: center;
+		background-color: #2f4550;
+		color: #f4f4f9;
+	}
+	a {
+		color: #4ab4e9;
+	}
+	header {
+		font-size: 2em;
+	}
+	#download {
+		position: fixed;
+		bottom: 0px;
+		z-index: 10;
+		font-size: 2em;
+		background-color: #4ab4e9;
+		outline: none;
+		border-radius: 15px;
+		border: #2f4550 solid 1px;
+	}
+</style>
