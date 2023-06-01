@@ -32,14 +32,14 @@ if (!rand) return new Response("error", { status: 401 });
 	</head>
 	<body>
 		<header>
-			Photo by <a href={rand.user.links.html}>{rand.user.name}</a> on <a
+			Photo by <a href={rand.user.links.html + "?utm_source=Good%20morning%20biker&utm_medium=referral"}>{rand.user.name}</a> on <a
 				href="https://unsplash.com/">Unsplash</a
 			>
 		</header>
 		<canvas id="canvas"></canvas>
 		<input type="button" value="Download" id="download" />
 		<footer>
-			Photo src: <a href={rand.links.html} id="src">{rand.urls.regular}</a>
+			Photo src: <a href={rand.links.html} id="src" data-download={rand.links.download_location}>{rand.urls.regular}</a>
 		</footer>
 	</body>
 </html>
@@ -52,7 +52,7 @@ if (!rand) return new Response("error", { status: 401 });
 		if (ctx != null) {
 			const img = new Image();
 			const src = document.querySelector("#src");
-			if (src != null) {
+			if (src) {
 				img.crossOrigin = "anonymous";
 				img.src = src.innerHTML.trim();
 				img.addEventListener("load", () => {
@@ -81,6 +81,11 @@ if (!rand) return new Response("error", { status: 401 });
 		if (download != null) {
 			download.addEventListener("click", () => {
 				// TODO call download api endpoint
+				const src = document.querySelector("#src");
+				if (!src)
+					return;
+				
+				fetch("/download?location=" + src.getAttribute("data-download"));
 
 				var aDownloadLink = document.createElement("a");
 				// Add the name of the file to the link

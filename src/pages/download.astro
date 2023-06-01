@@ -1,0 +1,17 @@
+---
+import { createApi } from "unsplash-js";
+const search = Astro.url.searchParams;
+
+if (!search.has("location")) {
+    return new Response(undefined, {status: 400})
+}
+
+const loc:string = search.get("location") + "";
+
+const unsplash = createApi({
+	accessKey: import.meta.env.ACCESS_KEY,
+	fetch: fetch,
+});
+
+unsplash.photos.trackDownload({downloadLocation: loc});
+---
